@@ -1,4 +1,5 @@
 dictionary_path: "maps_dictionary.json"
+map_path: "maps/"
 cookies: "cookies.chrome()"
 
 starting_url: "https://www.patreon.com/api/posts?include=campaign%2Caccess_rules%2Cattachments%2Caudio%2Cimages

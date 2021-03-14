@@ -1,5 +1,7 @@
 import os
 import re
+import json as j
+from config import cfg
 
 
 def get_download_links(json):
@@ -26,7 +28,12 @@ def get_user_tags(json):
 
 def get_next_url(json):
     try:
-        next_url = json["links"]
+        next_url = json["links"]["next"]
         return next_url
     except KeyError:
         return None
+
+
+def write_submission_dictionary(submission_list):
+    with open(cfg.dictionary_path, 'w') as file:
+        j.dump(submission_list, file, indent=4)

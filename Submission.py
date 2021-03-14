@@ -1,6 +1,8 @@
-class Submission(object):
-    def __init__(self, links, tags):
-        self.links = links
-        self.tags = tags
-        self.compressed_photos = []
-        self.photos = []
+def create_submission(links, tags):
+    dictionary = {"links": links,
+                  "tags" : tags,
+                  "compressed_photos": [],
+                  "photos": [],
+                  "width": "",
+                  "height": ""}
+    return dictionary
