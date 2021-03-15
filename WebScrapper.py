@@ -57,7 +57,7 @@ class WebScrapper(object):
         for future in futures:
             try:
                 submission, name_list = future.result()
-                submission["compressed_photos"].extend(name_list)
+                submission["photos"].extend(name_list)
             except Exception as e:
                 print(e)
         write_submission_dictionary(self.submission_list)

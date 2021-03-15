@@ -1,8 +1,8 @@
 def create_submission(links, tags):
     dictionary = {"links": links,
-                  "tags" : tags,
-                  "compressed_photos": [],
-                  "photos": [],
+                  "tags": tags,
+                  "name": "",
                   "width": "",
-                  "height": ""}
+                  "height": "",
+                  "photos": []}
     return dictionary
