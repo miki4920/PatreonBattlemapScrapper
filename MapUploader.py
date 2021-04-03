@@ -12,12 +12,17 @@ def upload_file_java():
             fields = [
                 ('image', (submission["name"]+".jpg", open(image, 'rb'),
                            'image/jpg')),
-                ('name', 'nick'),
+                ('name', 'czepeku'),
             ]
             if submission["width"]:
                 fields.extend([('squareWidth', submission["width"]),
                                ('squareHeight', submission["height"])])
-            fields.extend([("tags", tag) for tag in submission["tags"]])
+            tags = [("tags", tag) for tag in submission["tags"]]
+            if image.split("\\")[-1].startswith("GL"):
+                tags.append(("tags", "nogrid"))
+            else:
+                tags.append(("tags", "grid"))
+            fields.extend(tags)
             multipart_data = MultipartEncoder(
                 fields=fields
             )

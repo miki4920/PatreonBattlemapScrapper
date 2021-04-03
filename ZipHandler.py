@@ -10,13 +10,15 @@ import re
 
 def get_submission_name(submission):
     file_name = submission["photos"][0]
-    file_name = file_name.split("\\")[1].split(" - ")[0]
-    size = re.search(r"\[.*\]", file_name)
+    file_name = file_name.split("\\")[1].split("-")[0]
+    file_name = re.sub(r'[^a-zA-Z_]', '_', file_name)
+    file_name = re.sub("(_)+", "_", file_name)
+    file_name = re.sub("_$|^_", "", file_name)
+    size = re.search("((?<!\d)\d{1,3}(?!\d))x((?<!\d)\d{1,3}(?!\d))", file_name)
     width, height = "", ""
+    if size:
+        width, height = list(map(int, size.group(0).split("x")))
 
-    file_name = file_name.replace(size.group(0), "").strip()
-    if "x" in size.group(0):
-        width, height = size.group(0).strip("[]").split("x")
     return file_name, width, height
 
 

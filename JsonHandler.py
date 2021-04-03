@@ -6,7 +6,7 @@ from config import cfg
 def get_download_links(json):
     try:
         content = json["attributes"]["content"]
-        links = re.findall(r"<a href=\"(https:\/\/www\.patreon\.com\/file\?h=[0-9]+&amp;i=[0-9]+)\">[\w -]*\$5 Rewards", content)
+        links = re.findall(cfg.regex_string, content)
         links = [link.replace("amp;", "") for link in links]
         return links
     except KeyError:
