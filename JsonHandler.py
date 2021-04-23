@@ -1,12 +1,12 @@
 import re
 import json as j
-from config import cfg
+from config import CONFIG
 
 
 def get_download_links(json):
     try:
         content = json["attributes"]["content"]
-        links = re.findall(cfg.regex_string, content)
+        links = re.findall(CONFIG.regex_string, content)
         links = [link.replace("amp;", "") for link in links]
         return links
     except KeyError:
@@ -34,5 +34,5 @@ def get_next_url(json):
 
 
 def write_submission_dictionary(submission_list):
-    with open(cfg.dictionary_path, 'w') as file:
+    with open(CONFIG.dictionary_path, 'w') as file:
         j.dump(submission_list, file, indent=4)

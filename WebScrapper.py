@@ -1,20 +1,19 @@
 from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
 import requests
-import browser_cookie3 as cookies
 from JsonHandler import *
 from Submission import create_submission
 from UtilityFunctions import *
-from config import cfg
+from config import CONFIG
 
 
 class WebScrapper(object):
     def __init__(self):
-        self.cookies = eval(cfg.cookies)
-        self.starting_url = cfg.starting_url
+        self.cookies = CONFIG.cookies
+        self.starting_url = CONFIG.starting_url
         self.submission_list = []
-        if os.path.exists(cfg.dictionary_path):
-            self.submission_list = read_json(cfg.dictionary_path)
+        if os.path.exists(CONFIG.dictionary_path):
+            self.submission_list = read_json(CONFIG.dictionary_path)
 
     def get_request(self, url, stream=False):
         return requests.get(url, cookies=self.cookies, stream=stream)
@@ -40,7 +39,7 @@ class WebScrapper(object):
             request = self.get_request(link, stream=True)
             name = str(request.headers['content-disposition']).split("; ")[1]
             name = name.replace("filename=", "").strip("\"")
-            name = cfg.map_path + name
+            name = CONFIG.map_path + name
             name_list.append(name)
             with open(name, "wb") as file:
                 for data in request.iter_content(chunk_size=4096):

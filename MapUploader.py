@@ -2,34 +2,29 @@ import requests
 from requests_toolbelt import MultipartEncoder
 
 from UtilityFunctions import read_json
-from config import cfg
+from config import CONFIG
 
 
 def upload_file_java():
-    submission_list = read_json(cfg.dictionary_path)
+    submission_list = read_json(CONFIG.dictionary_path)
     for submission in submission_list:
+        if len(submission["tags"]) > 1:
+            submission["tags"] = ",".join(submission["tags"])
         for image in submission["photos"]:
-            fields = [
-                ('image', (submission["name"]+".jpg", open(image, 'rb'),
-                           'image/jpg')),
-                ('name', 'czepeku'),
-            ]
-            if submission["width"]:
-                fields.extend([('squareWidth', submission["width"]),
-                               ('squareHeight', submission["height"])])
-            tags = [("tags", tag) for tag in submission["tags"]]
-            if image.split("\\")[-1].startswith("GL"):
-                tags.append(("tags", "nogrid"))
-            else:
-                tags.append(("tags", "grid"))
-            fields.extend(tags)
-            multipart_data = MultipartEncoder(
-                fields=fields
-            )
+            image = {"picture": open(image, "rb")}
+
+            metadata = {"name": submission["name"],
+                        "extension": "jpg",
+                        "uploader": "czepeku",
+                        "square_width": submission["width"],
+                        "square_height": submission["height"],
+                        "tags": submission["tags"],
+                        "ignore_hash": "true",
+                        }
             try:
-                response = requests.post("http://192.168.0.40/api/images", data=multipart_data,
-                                         headers={'Content-Type': multipart_data.content_type})
-                print(response)
+                response = requests.post("http://192.168.0.11:8000/maps/", data=metadata,
+                                         files=image)
+                print(response.content)
             except Exception as e:
                 print(e)
 
