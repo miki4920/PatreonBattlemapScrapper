@@ -1,68 +1,50 @@
-from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
+from io import BytesIO
+import os
+import re
 import requests
-from JsonHandler import *
-from Submission import create_submission
-from UtilityFunctions import *
+
+from zipfile import ZipFile
+
 from config import CONFIG
 
 
 class WebScrapper(object):
     def __init__(self):
-        self.cookies = CONFIG.cookies
-        self.starting_url = CONFIG.starting_url
-        self.submission_list = []
-        if os.path.exists(CONFIG.dictionary_path):
-            self.submission_list = read_json(CONFIG.dictionary_path)
+        self.url = CONFIG.STARTING_URL
+        self.create_directory()
 
-    def get_request(self, url, stream=False):
-        return requests.get(url, cookies=self.cookies, stream=stream)
+    @staticmethod
+    def create_directory():
+        if not os.path.exists(CONFIG.MAP_PATH):
+            os.makedirs(CONFIG.MAP_PATH)
 
-    def get_submissions(self):
-        request = self.get_request(self.starting_url).json()
-        while True:
-            for submission in request["data"]:
-                links = get_download_links(submission)
-                if links:
-                    tags = get_user_tags(submission)
-                    submission = create_submission(links, tags)
-                    self.submission_list.append(submission)
-            write_submission_dictionary(self.submission_list)
-            next_url = get_next_url(request)
-            if not next_url:
-                break
-            request = self.get_request(next_url).json()
+    @staticmethod
+    def download(url):
+        download = requests.get(url, cookies=CONFIG.COOKIES)
+        with ZipFile(BytesIO(download.content)) as download_zip:
+            for name in download_zip.namelist():
+                if re.match("^(?!__MACOSX).+GL_.+\.((jpg)|(png))", name):
+                    path = re.search("GL_([\w\.]+)", name).group(1)
+                    path = "".join(path.split("_"))
+                    path = re.split("([A-Z][a-z]+)", path)
+                    path = [word for word in path if len(word) >= 3]
+                    path = CONFIG.MAP_PATH + "_".join(path[:-1]) + path[-1]
+                    with open(path, "wb") as file:
+                        file.write(download_zip.read(name))
 
-    def download_file(self, submission):
-        name_list = []
-        for link in submission["links"]:
-            request = self.get_request(link, stream=True)
-            name = str(request.headers['content-disposition']).split("; ")[1]
-            name = name.replace("filename=", "").strip("\"")
-            name = CONFIG.map_path + name
-            name_list.append(name)
-            with open(name, "wb") as file:
-                for data in request.iter_content(chunk_size=4096):
-                    file.write(data)
-        return submission, name_list
-
-    def download_files(self):
-        futures = []
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            for submission in self.submission_list:
-                future = executor.submit(self.download_file, submission)
-                futures.append(future)
-        futures, _ = concurrent.futures.wait(futures)
-        for future in futures:
-            try:
-                submission, name_list = future.result()
-                submission["photos"].extend(name_list)
-            except Exception as e:
-                print(e)
-        write_submission_dictionary(self.submission_list)
+    def scrape(self):
+        while self.url:
+            request = requests.get(self.url, cookies=CONFIG.COOKIES).text
+            links = re.findall(CONFIG.LINK_REGEX, request)
+            links = [link.replace("amp;", "") for link in links]
+            with concurrent.futures.ThreadPoolExecutor() as exector:
+                exector.map(self.download, links)
+            self.url = re.search("\"next\":\"(https:\/\/[\w:\/\.\?=%&-]+)", request)
+            self.url = self.url.group(1) if self.url else None
 
 
 webscrapper = WebScrapper()
-webscrapper.get_submissions()
-webscrapper.download_files()
+webscrapper.scrape()
+
 
